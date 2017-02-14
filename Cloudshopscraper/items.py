@@ -25,4 +25,5 @@ class CloudshopscraperItem(scrapy.Item):
     Public_Private        = scrapy.Field()
     Company_Phone         = scrapy.Field()
     Company_Website       = scrapy.Field()
-    Company_Email         = scrapy.Field() 
+    Company_Email         = scrapy.Field()
+    Check_url             = scrapy.Field()

@@ -5,18 +5,18 @@ from Cloudshopscraper.items import CloudshopscraperItem
 import requests
 import re
 
-class CloudshowspiderSpider(scrapy.Spider):
-    name = "cloudshowspider"
+class CloudshowindustryspiderSpider(scrapy.Spider):
+    name = "cloudshowindustryspider"
     allowed_domains = ["cloudshowplace.com"]
     start_urls = (
-        'http://www.cloudshowplace.com/application/',
+        'http://www.cloudshowplace.com/industry/',
     )
 
     def parse(self, response):
 
-        for i in range(1, 44):
+        for i in range(1, 35): 
 
-            res_get = requests.get(  url='http://www.cloudshowplace.com/ODD_FILES/jcm/load_data.php?queryType=application&appid=%d&_=1485191630610' % i,
+            res_get = requests.get(  url='http://www.cloudshowplace.com/ODD_FILES/jcm/load_data.php?queryType=industry&appid=%d&_=1486385144869' % i,
                                  headers={ 'X-Requested-With': 'XMLHttpRequest'} )
        
             company_list = res_get.text.split('$.fancybox.open')
@@ -33,6 +33,7 @@ class CloudshowspiderSpider(scrapy.Spider):
                     if ( sub_url.group(1) != "awardSummary"):
     
                         req = Request( url=comp_url, callback=self.company_detail, dont_filter=True )
+                        req.meta['comp_url'] = comp_url
                         yield req
 
                 except:
@@ -42,8 +43,10 @@ class CloudshowspiderSpider(scrapy.Spider):
 
         # self.logger.info( "-----------------------------" )
         # self.logger.info( response )
+        ccc = response.meta['comp_url']
 
         item = CloudshopscraperItem()
+        item['Check_url'] = ccc
 
         data_trs = response.xpath('//div[@id="divMain"]/div[@id="divContent"]/table/tr')
 
@@ -73,16 +76,16 @@ class CloudshowspiderSpider(scrapy.Spider):
                 item['Country'] = ' '.join(data_tr.xpath('td/div[@class="divText"]/text()').extract()).strip()
 
             if( data_level == "Application Categories:" ):
-                item['Application_Category'] = ' '.join(data_tr.xpath('following-sibling::tr/td/div[@class="divText2"]/text()').extract()).strip()
+                item['Application_Category'] = ''.join(data_tr.xpath('following-sibling::tr/td/div[@class="divText2"]/text()').extract()).strip()
 
             if( data_level == "Target Industries:" ):
-                item['Target_Industry'] = ' '.join(data_tr.xpath('following-sibling::tr/td/div[@class="divText2"]/text()').extract()).strip()
+                item['Target_Industry'] = ''.join(data_tr.xpath('following-sibling::tr/td/div[@class="divText2"]/text()').extract()).strip()
 
             if( data_level == "Key Differentiators:" ):
-                item['Key_Differentiators'] = ' '.join(data_tr.xpath('following-sibling::tr/td/div[@class="divText2"]/text()').extract()).strip()
+                item['Key_Differentiators'] = ''.join(data_tr.xpath('following-sibling::tr/td/div[@class="divText2"]/text()').extract()).strip()
 
             if( data_level == "Sample Customer Names:" ):
-                item['Sample_Customer_Names'] = ' '.join(data_tr.xpath('following-sibling::tr/td/div[@class="divText2"]/text()').extract()).strip()
+                item['Sample_Customer_Names'] = ''.join(data_tr.xpath('following-sibling::tr/td/div[@class="divText2"]/text()').extract()).strip()
 
             if( data_level == "Year Founded:" ):
                 item['Year_Founded'] = ' '.join(data_tr.xpath('td/div[@class="divText"]/text()').extract()).strip()
@@ -94,7 +97,13 @@ class CloudshowspiderSpider(scrapy.Spider):
                 item['Company_Phone'] = ' '.join(data_tr.xpath('td/div[@class="divText"]/text()').extract()).strip()
 
             if( data_level == "Company Website:" ):
-                item['Company_Website'] = ' '.join(data_tr.xpath('td/div[@class="divText"]/a/@href').extract()).strip()
+                # "http://http://www.asd.com"
+                # http://https//www.myfairtool.com
+                temp_str = ' '.join(data_tr.xpath('td/div[@class="divText"]/a/@href').extract()).strip()
+
+                temp_str1 = temp_str.replace("http://https//", "https://")
+                temp_str2 = temp_str1.replace("http://https://", "http://")
+                item['Company_Website'] = temp_str2.replace("http://http://", "http://")
 
             if( data_level == "Company E-mail Address:" ):
                 item['Company_Email'] = ' '.join(data_tr.xpath('td/div[@class="divText"]/a/text()').extract()).strip()
